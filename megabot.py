@@ -115,7 +115,7 @@ def create_mm2_json():
         "rpc_password": "",
         "passphrase": SEED,
         "userhome": HOME,
-        "dbdir": f"{HOME}/.atomic_qt"
+        "dbdir": f"{HOME}/.atomic_qt/mm2/DB"
     }
     userpass = generate_rpc_pass(16)
     create_userpass_file(userpass)
@@ -357,10 +357,10 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'scalp':
             while True:
                 coins_with_balance = get_balances()
-                time.sleep(90)
+                time.sleep(150)
                 scalp(coins_with_balance)
                 print("\n======================================================\n")
-                time.sleep(90)
+                time.sleep(150)
         else:
             print("Invalid option! Choose from ['start_bot', 'activate', 'configure', 'orders', 'scalp']")
     else:
