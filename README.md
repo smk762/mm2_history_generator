@@ -23,3 +23,6 @@ Ideally, run this alongside someone else so there are lots of undermarket trades
 Be careful not to add large funds to any wallet, as you will be selling at under CEX price.
 
 **Bonus feature:** Because `./megabot.py activate` batch enables almost every coin (> 500), it can be a useful tool to identify which coins you might have forgotten balances on.
+
+TODO:
+- Currently SLP and QRC20 coins are not compatible.
