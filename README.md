@@ -22,7 +22,10 @@ Leave this running overnight on a wallet with a small amount of many currencies 
 Ideally, run this alongside someone else so there are lots of undermarket trades on the orderbook.
 Be careful not to add large funds to any wallet, as you will be selling at under CEX price.
 
-**Bonus feature:** Because `./megabot.py activate` batch enables almost every coin (> 500), it can be a useful tool to identify which coins you might have forgotten balances on.
+**Bonus features:**
+- Because `./megabot.py activate` batch enables almost every coin (> 500), it can be a useful tool to identify which coins you might have forgotten balances on.
+- The MM2.json created by `./megabot.py configure` will use a different port (7784) so can be run alongside other mm2 instances. It has also defines the `DB` folder to be same as one used by Desktop, so you should be able to view history in GUI.
+
 
 TODO:
 - Currently SLP and QRC20 coins are not compatible.
