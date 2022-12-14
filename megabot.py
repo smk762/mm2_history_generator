@@ -471,7 +471,7 @@ if __name__ == '__main__':
         if sys.argv[1] == 'start_bot':
             coins_with_balance = get_balances()
             start_bot(coins_with_balance)
-        if sys.argv[1] == 'stop_bot':
+        elif sys.argv[1] == 'stop_bot':
             stop_bot()
         elif sys.argv[1] == 'configure':
             create_mm2_json()
