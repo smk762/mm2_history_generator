@@ -16,12 +16,16 @@ Note: EVM coins/tokens with high fees (ERC20/BEP20) and some newer protocols are
 - create a `.env` file, and add an entry called `SEED` for your seedphrase.
 - Run `./megabot.py configure` to create the `MM2.json` and `userpass` files
 - Launch mm2 with `./start_mm2.sh`
-- (optional) Run `./megabot.py activate` to activate coins (e.g. to check balances) without creating orders.
+- Run `./megabot.py activate` to activate coins (e.g. to check balances) without creating orders (do before starting bot!)
 - Run `./megabot.py start_bot` to place orders at 1% under market for all pair combinations of coins with balance in your wallet.
+- Run `./megabot.py balances` to view balances of coins with a balance.
+- Run `./megabot.py zhtlc_status` to activation status of ZHTLC coins.
 - Run `./megabot.py orders` to view currently placed orders (wait 5 min after starting bot so that these are populated)
 - Run `./megabot.py scalp` to buy from any orders in orderbook for pairs you have funds for in your wallet, where the sell price is under cex price. This will run in a loop, so exit with `Ctl-C`
 - Stop the makerbot with `./megabot.py stop_bot`
 - Stop mm2 with `stop_mm2.sh`
+
+If trading ZHTLC coins, you will need to wait for the coins cache to download first. You can still start the bot, and once the ZHTLC coin(s) are fully activated, you can stop the bot with `./megabot.py stop_bot` and then restart the bot with `./megabot.py start_bot` again. Wait at least 5 mins between stopping and restarting the bot so the final loop cycle will expire and you can start it again. Once a ZHTLC coin is fully activated, you will see its balance when running `./megabot.py balances`
 
 Leave this running overnight on a wallet with a small amount of many currencies which do not have high fee costs, and over time a long swap history will be generated.
 

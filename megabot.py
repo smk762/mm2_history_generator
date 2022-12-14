@@ -132,10 +132,14 @@ def get_electrums(coin):
     with open(f"{coins_path}/electrums/{coin}", "r") as f:
         return json.load(f)
 
+def get_light_wallet_d_servers(coin):
+    with open(f"{coins_path}/light_wallet_d/{coin}", "r") as f:
+        return json.load(f)
+
 def get_erc_activation(userpass, protocol_file, coin_info):
     data = get_rpc_nodes_data(protocol_file)
     payload = {
-        "userpass": userpass,
+        "userpass": get_userpass(),
         "method": "enable",
         "coin": coin_info["coin"],
         "urls": [i["url"] for i in data["rpc_nodes"]],
@@ -147,7 +151,7 @@ def get_erc_activation(userpass, protocol_file, coin_info):
 
 def get_utxo_activation(userpass, coin_info):
     payload = {
-        "userpass": userpass,
+        "userpass": get_userpass(),
         "method": "electrum",
         "coin": coin_info["coin"],
         "servers": get_electrums(coin_info["coin"]),
@@ -155,19 +159,59 @@ def get_utxo_activation(userpass, coin_info):
     }
     return payload
 
+def get_zhtlc_activation(userpass, coin_info):
+    payload = {
+        "method": "init_z_coin",
+        "mmrpc": "2.0",
+        "userpass": get_userpass(),
+        "params": {
+            "ticker": coin_info["coin"],
+            "activation_params": {
+                "mode": {
+                    "rpc": "Light",
+                    "rpc_data": {
+                        "electrum_servers": get_electrums(coin_info["coin"]),
+                        "light_wallet_d_servers": get_light_wallet_d_servers(coin_info["coin"])
+                    }
+                }
+            }
+        }
+    }
+    return payload
+
+def get_zhtlc_activation_v2(userpass, coin_info):
+    payload = {
+        "method": "task::enable_z_coin::init",
+        "mmrpc": "2.0",
+        "userpass": get_userpass(),
+        "params": {
+            "ticker": coin_info["coin"],
+            "activation_params": {
+                "mode": {
+                    "rpc": "Light",
+                    "rpc_data": {
+                        "electrum_servers": get_electrums(coin_info["coin"]),
+                        "light_wallet_d_servers": get_light_wallet_d_servers(coin_info["coin"])
+                    }
+                }
+            }
+        }
+    }
+    return payload
+
 def batch_activate():
     userpass = get_userpass()
     utxo_enable = []
     erc_enable = []
+    zhtlc_enable = []
     for coin in coins_json:
         coin_info = coins_json[coin]
         coin_type = coin_info["type"]
         if coin in lightwallet_coins:
-            # ZHTLC activation
-            pass
+            zhtlc_enable.append(get_zhtlc_activation(userpass, coin_info))
+            zhtlc_enable.append(get_zhtlc_activation_v2(userpass, coin_info))
         elif coin in electrum_coins:
             utxo_enable.append(get_utxo_activation(userpass, coin_info))
-            pass
         elif coin_type != "SLP":
             if coin_info["is_testnet"]:
                 if testnet_protocols_reversed[coin_type] in ethereum_coins:
@@ -183,7 +227,7 @@ def batch_activate():
                 print(f"Coin activation not covered yet for {coin}")
         else:
             print(f"Coin activation not covered yet for {coin}")
-    params = utxo_enable + erc_enable
+    params = utxo_enable + erc_enable + zhtlc_enable
     resp = mm2_proxy(params)
     active = 0
     errors = 0
@@ -199,7 +243,10 @@ def batch_activate():
                 errors += 1
                 print(f"Error: {i}")
         else:
-            if float(i['balance']) > 0:
+            if 'result' in i:
+                if 'task_id' in i['result']:
+                    print(f"Task ID [{i['result']['task_id']}] for ZHTLC returned")
+            elif float(i['balance']) > 0:
                 print(f"{i['address']} | {i['coin']} | {i['balance']} ")
                 coins_with_balance.append(i['coin'])
             else:
@@ -245,8 +292,8 @@ def start_bot(coins):
                     f"{base}/{rel}": {
                         "base": base,
                         "rel": rel,
-                        "max": True,
                         "min_volume": {"percentage": "0.25"},
+                        "max_volume": {"percentage": "0.50"},
                         "spread": spread,
                         "base_confs": 3,
                         "base_nota": False,
@@ -327,10 +374,22 @@ def scalp(coins):
                     print(e)
                     pass
 
+def get_enabled_coins():
+    coins = []
+    payload = {
+        "userpass": get_userpass(),
+        "method": "get_enabled_coins"
+    }
+    resp = mm2_proxy(payload)
+    for i in resp["result"]:
+        coins.append(i['ticker'])
+    return coins
+
 def get_balances():
+    enabled_coins = get_enabled_coins()
     coins_with_balance = []
     batch = []
-    for coin in coins_json.keys():
+    for coin in enabled_coins:
         batch.append({
             "userpass": get_userpass(),
             "method": "my_balance",
@@ -339,12 +398,47 @@ def get_balances():
     resp = mm2_proxy(batch)
     print("\n=== BALANCES ===")
     for i in resp:
+        print(i)
+        '''
         if 'balance' in i:
             if float(i["balance"]) > 0:
                 print(i)
                 coins_with_balance.append(i["coin"])
+        '''
     print("\n")
     return coins_with_balance
+
+def get_zhtlc_status_v2():
+    payload = []
+    for i in range(10):
+        params = {
+            "userpass": get_userpass(),
+            "method": "task::enable_z_coin::status",
+            "mmrpc": "2.0",
+            "params": {
+                "task_id": i
+            }
+        }
+        payload.append(params)
+    resp = mm2_proxy(payload)
+    for i in resp:
+        print(i)
+
+def get_zhtlc_status():
+    payload = []
+    for i in range(10):
+        params = {
+            "userpass": get_userpass(),
+            "method": "init_z_coin_status",
+            "mmrpc": "2.0",
+            "params": {
+                "task_id": i
+            }
+        }
+        payload.append(params)
+    resp = mm2_proxy(payload)
+    for i in resp:
+        print(i)
 
 def mm2_proxy(params):
     r = requests.post(f"http://127.0.0.1:{PORT}", json.dumps(params))
@@ -359,7 +453,7 @@ def mm2_proxy(params):
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == 'start_bot':
-            coins_with_balance = batch_activate()
+            coins_with_balance = get_balances()
             start_bot(coins_with_balance)
         if sys.argv[1] == 'stop_bot':
             stop_bot()
@@ -369,6 +463,11 @@ if __name__ == '__main__':
             batch_activate()
         elif sys.argv[1] == 'orders':
             get_orders()
+        elif sys.argv[1] == 'balances':
+            get_balances()
+        elif sys.argv[1] == 'zhtlc_status':
+            get_zhtlc_status()
+            get_zhtlc_status_v2()
         elif sys.argv[1] == 'scalp':
             coins_with_balance = get_balances()
             while True:
@@ -376,6 +475,6 @@ if __name__ == '__main__':
                 scalp(coins_with_balance)
                 coins_with_balance = get_balances()
         else:
-            print("Invalid option! Choose from ['start_bot', 'stop_bot', 'activate', 'configure', 'orders', 'scalp']")
+            print("Invalid option! Choose from ['start_bot', 'balances', 'stop_bot', 'activate', 'configure', 'orders', 'scalp', 'zhtlc_status']")
     else:
-        print("No action! Choose from ['start_bot', 'stop_bot', 'activate', 'configure', 'orders', 'scalp']")
+        print("No action! Choose from ['start_bot', 'balances', 'stop_bot', 'activate', 'configure', 'orders', 'scalp', 'zhtlc_status']")
