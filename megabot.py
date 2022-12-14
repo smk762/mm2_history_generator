@@ -286,6 +286,17 @@ def stop_bot():
     print(mm2_proxy(params))
 
 
+def cancel_orders():
+    params = {
+    "userpass": get_userpass(),
+    "method": "cancel_all_orders",
+    "cancel_by": {
+            "type": "All"
+        }
+    }
+    print(mm2_proxy(params))
+
+
 def start_bot(coins):
     cfg = {}
     for base in coins:
@@ -468,6 +479,8 @@ if __name__ == '__main__':
             batch_activate()
         elif sys.argv[1] == 'orders':
             get_orders()
+        elif sys.argv[1] == 'cancel_orders':
+            cancel_orders()
         elif sys.argv[1] == 'balances':
             get_balances()
         elif sys.argv[1] == 'zhtlc_status':
@@ -480,6 +493,6 @@ if __name__ == '__main__':
                 scalp(coins_with_balance)
                 coins_with_balance = get_balances()
         else:
-            print("Invalid option! Choose from ['start_bot', 'balances', 'stop_bot', 'activate', 'configure', 'orders', 'scalp', 'zhtlc_status']")
+            print("Invalid option! Choose from ['start_bot', 'balances', 'stop_bot', 'activate', 'configure', 'orders', 'scalp', 'zhtlc_status', 'cancel_orders']")
     else:
-        print("No action! Choose from ['start_bot', 'balances', 'stop_bot', 'activate', 'configure', 'orders', 'scalp', 'zhtlc_status']")
+        print("No action! Choose from ['start_bot', 'balances', 'stop_bot', 'activate', 'configure', 'orders', 'scalp', 'zhtlc_status', 'cancel_orders']")
