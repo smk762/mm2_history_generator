@@ -223,6 +223,17 @@ def get_orderbook(base, rel):
     }
     return mm2_proxy(params)
 
+def stop_bot():
+    params = {
+    "userpass": get_userpass(),
+    "mmrpc": "2.0",
+    "method": "stop_simple_market_maker_bot",
+    "params": {},
+    "id": 0
+    }
+    print(mm2_proxy(params))
+
+
 def start_bot(coins):
     cfg = {}
     for base in coins:
@@ -350,6 +361,8 @@ if __name__ == '__main__':
         if sys.argv[1] == 'start_bot':
             coins_with_balance = batch_activate()
             start_bot(coins_with_balance)
+        if sys.argv[1] == 'stop_bot':
+            stop_bot()
         elif sys.argv[1] == 'configure':
             create_mm2_json()
         elif sys.argv[1] == 'activate':
@@ -363,6 +376,6 @@ if __name__ == '__main__':
                 scalp(coins_with_balance)
                 coins_with_balance = get_balances()
         else:
-            print("Invalid option! Choose from ['start_bot', 'activate', 'configure', 'orders', 'scalp']")
+            print("Invalid option! Choose from ['start_bot', 'stop_bot', 'activate', 'configure', 'orders', 'scalp']")
     else:
-        print("No action! Choose from ['start_bot', 'activate', 'configure', 'orders', 'scalp']")
+        print("No action! Choose from ['start_bot', 'stop_bot', 'activate', 'configure', 'orders', 'scalp']")
