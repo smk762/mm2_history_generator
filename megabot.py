@@ -372,7 +372,7 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'scalp':
             coins_with_balance = get_balances()
             while True:
-                time.sleep(15)
+                time.sleep(60)
                 scalp(coins_with_balance)
                 coins_with_balance = get_balances()
         else:
