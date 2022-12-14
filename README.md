@@ -19,7 +19,8 @@ Note: EVM coins/tokens with high fees (ERC20/BEP20) and some newer protocols are
 - (optional) Run `./megabot.py activate` to activate coins (e.g. to check balances) without creating orders.
 - Run `./megabot.py start_bot` to place orders at 1% under market for all pair combinations of coins with balance in your wallet.
 - Run `./megabot.py orders` to view currently placed orders (wait 5 min after starting bot so that these are populated)
-- Run `./megabot.py scalp` to buy from any orders in orderbook for pairs you have funds for in your wallet, where the sell price is under cex price.
+- Run `./megabot.py scalp` to buy from any orders in orderbook for pairs you have funds for in your wallet, where the sell price is under cex price. This will run in a loop, so exit with `Ctl-C`
+- Stop the makerbot with `./megabot.py stop_bot`
 - Stop mm2 with `stop_mm2.sh`
 
 Leave this running overnight on a wallet with a small amount of many currencies which do not have high fee costs, and over time a long swap history will be generated.
