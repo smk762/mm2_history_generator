@@ -40,17 +40,18 @@ coins_path = f"{script_path}/coins"
 lightwallet_coins = [f for f in os.listdir(f"{coins_path}/light_wallet_d") if os.path.isfile(f"{coins_path}/light_wallet_d/{f}")]
 electrum_coins = [f for f in os.listdir(f"{coins_path}/electrums") if os.path.isfile(f"{coins_path}/electrums/{f}")]
 ethereum_coins = [f for f in os.listdir(f"{coins_path}/ethereum") if os.path.isfile(f"{coins_path}/ethereum/{f}")]
-print(f"{coins_path}/utils/coins_config.json")
+
 with open(f"{coins_path}/utils/coins_config.json", "r") as f:
     coins_json = json.load(f)
 with open(f"{coins_path}/slp/bchd_urls.json", "r") as f: bchd_urls = json.load(f)
 with open(f"{coins_path}/coins", "r") as f: coins_file = json.load(f)
 
+
+# Excluding ERC20 and BEP20 so fees dont drain funds too fast
+
 protocols = {
     "AVAX": "AVX-20",
-    "BNB": "BEP-20",
     "ETC": "Ethereum Classic",
-    "ETH": "ERC-20",
     "ETH-ARB20": "Arbitrum",
     "FTM": "FTM-20",
     "GLMR": "Moonbeam",
@@ -62,7 +63,6 @@ protocols = {
     "QTUM": "QRC-20",
     "RBTC": "RSK Smart Bitcoin",
     "SBCH": "SmartBCH",
-    "SLP": "SLPTOKEN",
     "UBQ": "Ubiq"
 }
 
@@ -185,19 +185,26 @@ def batch_activate():
             print(f"Coin activation not covered yet for {coin}")
     params = utxo_enable + erc_enable
     resp = mm2_proxy(params)
+    active = 0
     errors = 0
     no_balance = 0
     coins_with_balance = []
     for i in resp:
         if "error" in i:
-            errors += 1
-            # print(f"Error: {i}")
+            if i["error"].find("already initialized") > -1:
+                active += 1
+                msg = i["error"].split("]")[-1]
+                print(msg)
+            else:
+                errors += 1
+                print(f"Error: {i}")
         else:
             if float(i['balance']) > 0:
                 print(f"{i['address']} | {i['coin']} | {i['balance']} ")
                 coins_with_balance.append(i['coin'])
             else:
                 no_balance += 1
+    print(f"{active} coins already activated")
     print(f"{len(coins_with_balance)} coins with balance activated")
     print(f"{no_balance} coins without balance also activated")
     print(f"{errors} coins with error when trying to activate")
@@ -220,10 +227,7 @@ def start_bot(coins):
     cfg = {}
     for base in coins:
         for rel in coins:
-            if (base != rel
-                and len({base, rel} & set(protocols.keys())) == 0
-                and len({base, rel} & set(testnet_protocols.keys())) == 0
-                and rel != "KMD"):
+            if (base != rel and rel not in ["KMD", "BTC"]):
                 if base == "KMD": spread = "1.01"
                 else: spread = "0.99"
                 cfg.update({
@@ -238,7 +242,7 @@ def start_bot(coins):
                         "rel_confs": 3,
                         "rel_nota": False,
                         "enable": True,
-                        "price_elapsed_validity": 90.0,
+                        "price_elapsed_validity": 300.0,
                         "check_last_bidirectional_trade_thresh_hold": True
                     }
                 })
@@ -248,7 +252,7 @@ def start_bot(coins):
         "method": "start_simple_market_maker_bot",
         "params": {
             "price_url": "https://prices.komodo.live:1313/api/v2/tickers?expire_at=600",
-            "bot_refresh_rate": 120,
+            "bot_refresh_rate": 300,
             "cfg": cfg
         }
     }
@@ -287,11 +291,7 @@ def scalp(coins):
         for rel in coins:
             prices_base = base.split("-")[0]
             prices_rel = rel.split("-")[0]
-            if (base != rel
-                and rel not in protocols.keys()
-                and len({base, rel} & set(testnet_protocols.keys())) == 0
-                and len({prices_base, prices_rel} & set(prices.keys())) == 2
-                and rel != "KMD"):
+            if (base != rel and len({prices_base, prices_rel} & set(prices.keys())) == 2):
                 try:
                     base_cex_price = prices[prices_base]["last_price"]
                     rel_cex_price = prices[prices_rel]["last_price"]
@@ -326,11 +326,13 @@ def get_balances():
             "coin": coin
         })
     resp = mm2_proxy(batch)
+    print("\n=== BALANCES ===")
     for i in resp:
         if 'balance' in i:
             if float(i["balance"]) > 0:
                 print(i)
                 coins_with_balance.append(i["coin"])
+    print("\n")
     return coins_with_balance
 
 def mm2_proxy(params):
@@ -355,12 +357,11 @@ if __name__ == '__main__':
         elif sys.argv[1] == 'orders':
             get_orders()
         elif sys.argv[1] == 'scalp':
+            coins_with_balance = get_balances()
             while True:
-                coins_with_balance = get_balances()
-                time.sleep(150)
+                time.sleep(15)
                 scalp(coins_with_balance)
-                print("\n======================================================\n")
-                time.sleep(150)
+                coins_with_balance = get_balances()
         else:
             print("Invalid option! Choose from ['start_bot', 'activate', 'configure', 'orders', 'scalp']")
     else:
