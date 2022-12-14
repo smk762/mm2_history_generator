@@ -60,7 +60,6 @@ protocols = {
     "MATIC": "Matic",
     "MOVR": "Moonriver",
     "ONE": "HRC-20",
-    "QTUM": "QRC-20",
     "RBTC": "RSK Smart Bitcoin",
     "SBCH": "SmartBCH",
     "UBQ": "Ubiq"
@@ -71,7 +70,6 @@ testnet_protocols = {
     "BNBT": "BEP-20",
     "FTMT": "FTM-20",
     "tSLP": "SLPTOKEN",
-    "tQTUM": "QRC-20",
     "MATICTEST": "Matic",
     "UBQ": "Ubiq"
 }
@@ -138,6 +136,7 @@ def get_light_wallet_d_servers(coin):
 
 def get_erc_activation(userpass, protocol_file, coin_info):
     data = get_rpc_nodes_data(protocol_file)
+    print(coin_info)
     payload = {
         "userpass": get_userpass(),
         "method": "enable",
@@ -214,13 +213,19 @@ def batch_activate():
             utxo_enable.append(get_utxo_activation(userpass, coin_info))
         elif coin_type != "SLP":
             if coin_info["is_testnet"]:
-                if testnet_protocols_reversed[coin_type] in ethereum_coins:
-                    erc_enable.append(get_erc_activation(userpass, testnet_protocols_reversed[coin_type], coin_info))
+                if coin_type in testnet_protocols_reversed:
+                    if testnet_protocols_reversed[coin_type] in ethereum_coins:
+                        erc_enable.append(get_erc_activation(userpass, testnet_protocols_reversed[coin_type], coin_info))
+                    else:
+                        print(f"Coin activation not covered yet for {coin}")
                 else:
                     print(f"Coin activation not covered yet for {coin}")
             elif coin_type in protocols_reversed:
-                if protocols_reversed[coin_type] in ethereum_coins:
-                    erc_enable.append(get_erc_activation(userpass, protocols_reversed[coin_type], coin_info))
+                if coin_type in protocols_reversed:
+                    if protocols_reversed[coin_type] in ethereum_coins:
+                        erc_enable.append(get_erc_activation(userpass, protocols_reversed[coin_type], coin_info))
+                    else:
+                        print(f"Coin activation not covered yet for {coin}")
                 else:
                     print(f"Coin activation not covered yet for {coin}")
             else:
