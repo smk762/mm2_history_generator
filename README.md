@@ -3,7 +3,7 @@
 This tool is intended to generate a long swap history for multiple coins to assist with testing our GUI apps.
 Note: EVM coins/tokens with high fees (ERC20/BEP20) and some newer protocols are excluded.
 
-**It has only been tested on linux, and likely needs some modifications to run on other OS.**
+**It has only been tested on Linux and MacOS, and likely needs some modifications to run on Windows.**
 **By default, the MEGABOT will set a low or negative margin for automated trades - do not run this with a seed that has funds you dont want to lose!**
 
 ### Prerequistes:
