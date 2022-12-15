@@ -19,11 +19,11 @@ Note: EVM coins/tokens with high fees (ERC20/BEP20) and some newer protocols are
 - Run `./megabot.py configure` to create the `MM2.json` and `userpass` files
 - Launch mm2 with `./start_mm2.sh`
 - Run `./megabot.py activate` to activate coins (and check balances) without creating orders (**do before starting bot!**)
-- Run `./megabot.py start_bot` to place automated bot orders for all pair combinations of coins with balance in your wallet.
+- Run `./megabot.py start_bot` to place automated bot orders for all pair combinations of coins with balance in your wallet. 
 - Run `./megabot.py start_bot_without_zhtlc` to place orders for all pair combinations of coins with balance in your wallet except ZHTLC coins.
 - Run `./megabot.py balances` to view balances of coins with a balance.
-- Run `./megabot.py zhtlc_status` to activation status of ZHTLC coins.
-- Run `./megabot.py orders` to view currently placed orders (wait 5 min after starting bot so that these are populated)
+- Run `./megabot.py zhtlc_status` to activation status of ZHTLC coins. If trading ZHTLC coins, make sure they are fully activated before you start the bot.
+- Run `./megabot.py orders` to view currently placed orders.
 - Run `./megabot.py cancel_orders` to cancel all active orders.
 - Run `./megabot.py scalp` to buy from any orders in orderbook for pairs you have funds for in your wallet, where the sell price is under cex price.
 - Run `./megabot.py scalp_loop` to buy from any orders in orderbook for pairs you have funds for in your wallet, where the sell price is under cex price. This will run in a loop, so exit with `Ctl-C`
