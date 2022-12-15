@@ -13,12 +13,14 @@ Note: EVM coins/tokens with high fees (ERC20/BEP20) and some newer protocols are
 
 
 ### To Use:
-- create a `.env` file, and add an entry called `SEED` for your seedphrase. Optionally, you can also add a numeric value with an entry called `MARGIN` to set a more profitable spread on orders (a value of 1 = 1% over CEX market price).
+- Create a `.env` file, and add an entry called `SEED` for your seedphrase.
+- Optionally, you can also add to the `.env` a numeric value with an entry called `MARGIN` to set a more profitable spread on orders (a value of 1 = 1% over CEX market price).
+- Optionally, you can also add to the `.env` a list of tickers with an entry called `TRADE_ONLY` to select a smaller set of coins to be included in bot order placements).
 - Run `./megabot.py configure` to create the `MM2.json` and `userpass` files
 - Launch mm2 with `./start_mm2.sh`
-- Run `./megabot.py activate` to activate coins (e.g. to check balances) without creating orders (do before starting bot!)
-- Run `./megabot.py start_bot` to place orders at 1% under market for all pair combinations of coins with balance in your wallet.
-- Run `./megabot.py start_bot_without_zhtlc` to place orders at 1% under market for all pair combinations of coins with balance in your wallet except ZHTLC coins.
+- Run `./megabot.py activate` to activate coins (and check balances) without creating orders (**do before starting bot!**)
+- Run `./megabot.py start_bot` to place automated bot orders for all pair combinations of coins with balance in your wallet.
+- Run `./megabot.py start_bot_without_zhtlc` to place orders for all pair combinations of coins with balance in your wallet except ZHTLC coins.
 - Run `./megabot.py balances` to view balances of coins with a balance.
 - Run `./megabot.py zhtlc_status` to activation status of ZHTLC coins.
 - Run `./megabot.py orders` to view currently placed orders (wait 5 min after starting bot so that these are populated)
@@ -26,7 +28,7 @@ Note: EVM coins/tokens with high fees (ERC20/BEP20) and some newer protocols are
 - Run `./megabot.py scalp` to buy from any orders in orderbook for pairs you have funds for in your wallet, where the sell price is under cex price.
 - Run `./megabot.py scalp_loop` to buy from any orders in orderbook for pairs you have funds for in your wallet, where the sell price is under cex price. This will run in a loop, so exit with `Ctl-C`
 - Stop the makerbot with `./megabot.py stop_bot`
-- Stop mm2 with `./stop_mm2.sh`
+- Stop mm2 with `./stop_mm2.sh` (this will also cancel any currently placed orders before exiting).
 - Cancel all existing orders with `./cancel_orders`
 
 - Update to the latest coins in master branch of https://github.com/KomodoPlatform/coins with `./update_coins.sh`
