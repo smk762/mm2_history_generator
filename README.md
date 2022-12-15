@@ -76,6 +76,7 @@ Task ID [1] for ZHTLC returned
 
 Checking status also will return errors from whichever method set is not available, and some for non-existent or finished task IDs (by default it checks task_id values in range 0-9). 
 
+```
 {'mmrpc': '2.0', 'error': 'No such method', 'error_path': 'dispatcher', 'error_trace': 'dispatcher:188]', 'error_type': 'NoSuchMethod', 'id': None}
 {'mmrpc': '2.0', 'error': 'No such method', 'error_path': 'dispatcher', 'error_trace': 'dispatcher:188]', 'error_type': 'NoSuchMethod', 'id': None}
 {'mmrpc': '2.0', 'error': 'No such method', 'error_path': 'dispatcher', 'error_trace': 'dispatcher:188]', 'error_type': 'NoSuchMethod', 'id': None}
@@ -96,3 +97,4 @@ Checking status also will return errors from whichever method set is not availab
 {'mmrpc': '2.0', 'error': "No such task '7'", 'error_path': 'init_standalone_coin', 'error_trace': 'init_standalone_coin:133]', 'error_type': 'NoSuchTask', 'error_data': 7, 'id': None}
 {'mmrpc': '2.0', 'error': "No such task '8'", 'error_path': 'init_standalone_coin', 'error_trace': 'init_standalone_coin:133]', 'error_type': 'NoSuchTask', 'error_data': 8, 'id': None}
 {'mmrpc': '2.0', 'error': "No such task '9'", 'error_path': 'init_standalone_coin', 'error_trace': 'init_standalone_coin:133]', 'error_type': 'NoSuchTask', 'error_data': 9, 'id': None}
+```
