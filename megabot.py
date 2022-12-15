@@ -12,6 +12,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 SEED = os.getenv('SEED')
+MARGIN = os.getenv('MARGIN')
+if MARGIN:
+    MARGIN = float(MARGIN)
+TRADE_ONLY = os.getenv('TRADE_ONLY')
+if TRADE_ONLY:
+    TRADE_ONLY = TRADE_ONLY.split(" ")
 PORT = 7784
 
 script_path = os.path.abspath(os.path.dirname(__file__))
@@ -136,7 +142,6 @@ def get_light_wallet_d_servers(coin):
 
 def get_erc_activation(userpass, protocol_file, coin_info):
     data = get_rpc_nodes_data(protocol_file)
-    print(coin_info)
     payload = {
         "userpass": get_userpass(),
         "method": "enable",
@@ -198,41 +203,45 @@ def get_zhtlc_activation_v2(userpass, coin_info):
     }
     return payload
 
-def batch_activate():
+def batch_activate(exclude=None):
+    if not exclude:
+        exclude = []
     userpass = get_userpass()
     utxo_enable = []
     erc_enable = []
     zhtlc_enable = []
     for coin in coins_json:
-        coin_info = coins_json[coin]
-        coin_type = coin_info["type"]
-        if coin in lightwallet_coins:
-            zhtlc_enable.append(get_zhtlc_activation(userpass, coin_info))
-            zhtlc_enable.append(get_zhtlc_activation_v2(userpass, coin_info))
-        elif coin in electrum_coins:
-            utxo_enable.append(get_utxo_activation(userpass, coin_info))
-        elif coin_type != "SLP":
-            if coin_info["is_testnet"]:
-                if coin_type in testnet_protocols_reversed:
-                    if testnet_protocols_reversed[coin_type] in ethereum_coins:
-                        erc_enable.append(get_erc_activation(userpass, testnet_protocols_reversed[coin_type], coin_info))
+        if coin not in exclude:
+            coin_info = coins_json[coin]
+            coin_type = coin_info["type"]
+            if coin in lightwallet_coins:
+                zhtlc_enable.append(get_zhtlc_activation(userpass, coin_info))
+                zhtlc_enable.append(get_zhtlc_activation_v2(userpass, coin_info))
+            elif coin in electrum_coins:
+                utxo_enable.append(get_utxo_activation(userpass, coin_info))
+            elif coin_type != "SLP":
+                if coin_info["is_testnet"]:
+                    if coin_type in testnet_protocols_reversed:
+                        if testnet_protocols_reversed[coin_type] in ethereum_coins:
+                            erc_enable.append(get_erc_activation(userpass, testnet_protocols_reversed[coin_type], coin_info))
+                        else:
+                            print(f"Coin activation not covered yet for {coin}")
                     else:
                         print(f"Coin activation not covered yet for {coin}")
-                else:
-                    print(f"Coin activation not covered yet for {coin}")
-            elif coin_type in protocols_reversed:
-                if coin_type in protocols_reversed:
-                    if protocols_reversed[coin_type] in ethereum_coins:
-                        erc_enable.append(get_erc_activation(userpass, protocols_reversed[coin_type], coin_info))
+                elif coin_type in protocols_reversed:
+                    if coin_type in protocols_reversed:
+                        if protocols_reversed[coin_type] in ethereum_coins:
+                            erc_enable.append(get_erc_activation(userpass, protocols_reversed[coin_type], coin_info))
+                        else:
+                            print(f"Coin activation not covered yet for {coin}")
                     else:
                         print(f"Coin activation not covered yet for {coin}")
                 else:
                     print(f"Coin activation not covered yet for {coin}")
             else:
                 print(f"Coin activation not covered yet for {coin}")
-        else:
-            print(f"Coin activation not covered yet for {coin}")
     params = utxo_enable + erc_enable + zhtlc_enable
+    print("Waiting for batch RPC response...")
     resp = mm2_proxy(params)
     active = 0
     errors = 0
@@ -251,13 +260,14 @@ def batch_activate():
             if 'result' in i:
                 if 'task_id' in i['result']:
                     print(f"Task ID [{i['result']['task_id']}] for ZHTLC returned")
-            elif float(i['balance']) > 0:
-                print(f"{i['address']} | {i['coin']} | {i['balance']} ")
-                coins_with_balance.append(i['coin'])
-            else:
-                no_balance += 1
+                elif float(i['balance']) > 0:
+                    print(f"{i['address']} | {i['coin']} | {i['balance']} ")
+                    coins_with_balance.append(i['coin'])
+                else:
+                    no_balance += 1
     print(f"{active} coins already activated")
     print(f"{len(coins_with_balance)} coins with balance activated")
+    print(f"{coins_with_balance}")
     print(f"{no_balance} coins without balance also activated")
     print(f"{errors} coins with error when trying to activate")
     return coins_with_balance
@@ -297,13 +307,24 @@ def cancel_orders():
     print(mm2_proxy(params))
 
 
-def start_bot(coins):
+def start_bot(coins, exclude=None):
+    print(f"MARGIN: {MARGIN}")
     cfg = {}
+    print(coins)
+    print(f"Coins with a balance: {coins}")
+    if TRADE_ONLY:
+        coins = TRADE_ONLY
+    if exclude:
+        coins = [i for i in coins if i not in exclude]
+    print(f"Starting bot with {coins}")
     for base in coins:
         for rel in coins:
             if (base != rel and rel not in ["KMD", "BTC"]):
-                if base == "KMD": spread = "1.01"
-                else: spread = "0.99"
+                if not MARGIN:
+                    if base == "KMD": spread = "1.01"
+                    else: spread = "0.99"
+                else:
+                    spread = 1 + MARGIN/100
                 cfg.update({
                     f"{base}/{rel}": {
                         "base": base,
@@ -414,13 +435,10 @@ def get_balances():
     resp = mm2_proxy(batch)
     print("\n=== BALANCES ===")
     for i in resp:
-        print(i)
-        '''
         if 'balance' in i:
             if float(i["balance"]) > 0:
                 print(i)
                 coins_with_balance.append(i["coin"])
-        '''
     print("\n")
     return coins_with_balance
 
@@ -467,16 +485,22 @@ def mm2_proxy(params):
     return resp
 
 if __name__ == '__main__':
+    available_methods = ['start_bot', 'start_bot_without_zhtlc', 'stop_bot', 'configure', 'activate', 'balances', 'orders', 'cancel_orders', 'scalp', 'scalp_loop', 'zhtlc_status']
     if len(sys.argv) > 1:
         if sys.argv[1] == 'start_bot':
             coins_with_balance = get_balances()
             start_bot(coins_with_balance)
+        elif sys.argv[1] == 'start_bot_without_zhtlc':
+            coins_with_balance = get_balances()
+            start_bot(coins_with_balance, ["ARRR", "ZOMBIE"])
         elif sys.argv[1] == 'stop_bot':
             stop_bot()
         elif sys.argv[1] == 'configure':
             create_mm2_json()
         elif sys.argv[1] == 'activate':
             batch_activate()
+        elif sys.argv[1] == 'activate_without_zhtlc':
+            batch_activate(["ARRR", "ZOMBIE"])
         elif sys.argv[1] == 'orders':
             get_orders()
         elif sys.argv[1] == 'cancel_orders':
@@ -487,12 +511,15 @@ if __name__ == '__main__':
             get_zhtlc_status()
             get_zhtlc_status_v2()
         elif sys.argv[1] == 'scalp':
+            while True:
+                scalp(coins_with_balance)
+        elif sys.argv[1] == 'scalp_loop':
             coins_with_balance = get_balances()
             while True:
                 time.sleep(60)
                 scalp(coins_with_balance)
                 coins_with_balance = get_balances()
         else:
-            print("Invalid option! Choose from ['start_bot', 'balances', 'stop_bot', 'activate', 'configure', 'orders', 'scalp', 'zhtlc_status', 'cancel_orders']")
+            print(f"Invalid option! Choose from {available_methods}")
     else:
-        print("No action! Choose from ['start_bot', 'balances', 'stop_bot', 'activate', 'configure', 'orders', 'scalp', 'zhtlc_status', 'cancel_orders']")
+        print(f"No action! Choose from {available_methods}")
