@@ -1,5 +1,7 @@
 # mm2_history_generator
 
+![image](https://user-images.githubusercontent.com/35845239/208709536-e301aec7-4016-4c2b-bd2b-e4641b9f4c27.png)
+
 This tool is intended to generate a long swap history for multiple coins to assist with testing our GUI apps.
 Note: EVM coins/tokens with high fees (ERC20/BEP20) and some newer protocols are excluded.
 
